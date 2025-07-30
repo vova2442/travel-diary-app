@@ -3,28 +3,39 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TravelController;
 use Illuminate\Support\Facades\Route;
-use App\Models\Travel; // Добавляем импорт модели Travel
+use App\Models\Travel;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Здесь мы регистрируем маршруты для нашего веб-приложения.
+|
+*/
+
+// Главная страница приложения. Теперь она показывает ленту сообщества.
 Route::get('/', function () {
-    return view('welcome');
-});
-
-// Новый маршрут для страницы сообщества
-Route::get('/community', function () {
-    // Получаем все путешествия от всех пользователей
-    // with('user') - сразу подгружает информацию о связанном пользователе, чтобы избежать лишних запросов к БД (решение проблемы N+1)
-    // latest() - это короткая запись для orderBy('created_at', 'desc')
     $travels = Travel::with('user')->latest()->get();
-
-    // Возвращаем новый view и передаем в него данные
     return view('community', [
         'travels' => $travels,
     ]);
-})->name('community'); // Даем маршруту имя 'community', чтобы на него было удобно ссылаться
+})->name('home'); // Называем маршрут 'home'
 
 
+// Маршрут для страницы сообщества. Он все еще работает, но главная ссылка будет вести на '/'.
+Route::get('/community', function () {
+    $travels = Travel::with('user')->latest()->get();
+    return view('community', [
+        'travels' => $travels,
+    ]);
+})->name('community');
+
+
+// Этот маршрут теперь будет перехватывать все обращения к /dashboard
+// и перенаправлять пользователя на страницу "Мои путешествия".
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect()->route('travels.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
